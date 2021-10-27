@@ -13,3 +13,12 @@
 
 # Dependency directories (remove the comment below to include it)
 # vendor/
+/.idea/.gitignore
+/ecryhub
+/ecryhub_mac
+/.idea/encryhub.iml
+/go.sum
+/.idea/misc.xml
+/.idea/modules.xml
+/.idea/thriftCompiler.xml
+/.idea/vcs.xml
