@@ -105,14 +105,14 @@ func Encrypt(plaintext []byte, pub *rsa.PublicKey) ([]byte, error) {
 }
 func EncryptBase64(plaintext []byte, pub *rsa.PublicKey) ([]byte, error) {
 	data, err := rsa.EncryptPKCS1v15(rand.Reader, pub, plaintext)
-	out := base64.RawURLEncoding.EncodeToString(data)
+	out := base64.StdEncoding.EncodeToString(data)
 	return []byte(out), err
 }
 func Decrypt(ciphertext []byte, private *rsa.PrivateKey) ([]byte, error) {
 	return rsa.DecryptPKCS1v15(rand.Reader, private, ciphertext)
 }
 func DecryptBase64(ciphertext []byte, private *rsa.PrivateKey) ([]byte, error) {
-	srcBase64, err := base64.RawURLEncoding.DecodeString(string(ciphertext))
+	srcBase64, err := base64.StdEncoding.DecodeString(string(ciphertext))
 	if err != nil {
 		fmt.Println("DecodeString:", err)
 		return nil, err
@@ -128,7 +128,7 @@ func Sign(src []byte, hash crypto.Hash, private *rsa.PrivateKey) ([]byte, error)
 }
 func SignBase64(src []byte, hash crypto.Hash, private *rsa.PrivateKey) ([]byte, error) {
 	data, err := Sign(src, hash, private)
-	out := base64.RawURLEncoding.EncodeToString(data)
+	out := base64.StdEncoding.EncodeToString(data)
 	return []byte(out), err
 }
 
@@ -139,13 +139,12 @@ func Verify(src []byte, sign []byte, hash crypto.Hash, pub *rsa.PublicKey) error
 	return rsa.VerifyPKCS1v15(pub, hash, hashed, sign)
 }
 func VerifyBase64(src []byte, sign []byte, hash crypto.Hash, pub *rsa.PublicKey) error {
-	srcBase64, err := base64.RawURLEncoding.DecodeString(string(src))
+	signBase64, err := base64.StdEncoding.DecodeString(string(sign))
 	if err != nil {
 		fmt.Println("DecodeString:", err)
 		return err
 	}
-	return Verify(srcBase64, sign, hash, pub)
-
+	return Verify(src, signBase64, hash, pub)
 }
 func GetPrivateKeyWithBase64(privateKey string, privateKeyType Type) (*rsa.PrivateKey, error) {
 	key, _ := base64.StdEncoding.DecodeString(privateKey)

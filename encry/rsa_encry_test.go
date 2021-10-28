@@ -1,6 +1,7 @@
 package encry
 
 import (
+	"crypto"
 	"fmt"
 	"io/ioutil"
 	"testing"
@@ -42,6 +43,7 @@ func Test_Decry(t *testing.T) {
 		return
 	}
 	pri, err := GetPrivateKeyWithBase64(string(pridata), PKCS8)
+	//pri, err := GetPrivateKeyWithBase64(string(pridata), PKCS1)
 	if err != nil {
 		fmt.Println("generate pri key error")
 		return
@@ -51,10 +53,14 @@ func Test_Decry(t *testing.T) {
 		fmt.Println("generate thirdpart pub key error")
 		return
 	}
-	fmt.Sprintf("%v", thirdpub)
-	var raw = "aaaa"
-	encrydata, _ := EncryptBase64([]byte(raw), pub)
-	fmt.Println("encry: ", string(encrydata))
-	data, _ := DecryptBase64(encrydata, pri)
-	fmt.Println("decry: ", string(data))
+	fmt.Sprintf("pub:%v, pri:%v, thirdpub:%v", pub, pri, thirdpub)
+	//var raw = "aaaa"
+	//encrydata, _ := EncryptBase64([]byte(raw), pub)
+	//fmt.Println("encry: ", string(encrydata))
+	encrydata := "Qu/d9A329yqTaDfPAEJek/xMutC3jO07wonL/BZsRw9EZiBm3i7gYvXcPUx7kJQTTabJvyybCIjAi9qjgE81VJuwbSwcdsgNakllyYrqDz0gAGPv5hkz5Sk8Idi9wj9wkCBX2RK77pANU5H3j1URA6UjhJnZE0Wlo6WZl6Qwxyo="
+	data, err := DecryptBase64([]byte(encrydata), pri)
+	fmt.Println("decry: ", string(data), err)
+	ss := "QE4S2t26Fgd6hEDqDW88w4CtmEXFdHQoAaAbeFtjmeD17AjQnwtjw0JWNhl3VidccXvc5cyDYmTwufG64FZuyHR6wWQiMck8Q8Iy/NMVUtFQZUhDMPCg6anK6ACQgMz/FiIu+vyrsGVgyu9OJZDk1FtY+AHdKRmYHqCvxaPXjmc="
+	err = VerifyBase64(data, []byte(ss), crypto.MD5, thirdpub)
+	fmt.Println("verify: ", err)
 }
