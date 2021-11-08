@@ -26,6 +26,16 @@ var PUB *rsa.PublicKey
 var PRI *rsa.PrivateKey
 var THIRD_PUB *rsa.PublicKey
 
+/**
+ * RSA最大加密明文大小
+ */
+var MAX_ENCRYPT_BLOCK = 117
+
+/**
+ * RSA最大解密密文大小
+ */
+var MAX_DECRYPT_BLOCK = 128
+
 func main() {
 
 	flag.IntVar(&port, "port", 60240, "port")
@@ -73,7 +83,8 @@ func main() {
 	})
 	r.POST("/encrypt", func(c *gin.Context) {
 		var p = struct {
-			Data string `json:"data"`
+			Data   string `json:"data"`
+			NoSign bool   `json:"noSign"`
 		}{}
 		if err := c.ShouldBind(&p); err != nil {
 			c.JSON(http.StatusOK, ApiReturn{
@@ -83,7 +94,7 @@ func main() {
 			return
 		}
 		pk := THIRD_PUB
-		encryDate, err := encry.EncryptBase64([]byte(p.Data), pk)
+		encryDate, err := encry.EncryptBase64([]byte(p.Data), pk, MAX_ENCRYPT_BLOCK)
 		if err != nil {
 			c.JSON(http.StatusOK, ApiReturn{
 				Ret: -1,
@@ -91,13 +102,16 @@ func main() {
 			})
 			return
 		}
-		sign, err := encry.SignBase64([]byte(p.Data), crypto.MD5, PRI)
-		if err != nil {
-			c.JSON(http.StatusOK, ApiReturn{
-				Ret: -1,
-				Msg: err.Error(),
-			})
-			return
+		var sign []byte
+		if !p.NoSign {
+			sign, err = encry.SignBase64([]byte(p.Data), crypto.MD5, PRI)
+			if err != nil {
+				c.JSON(http.StatusOK, ApiReturn{
+					Ret: -1,
+					Msg: err.Error(),
+				})
+				return
+			}
 		}
 		if c.IsAborted() {
 			return
@@ -122,7 +136,7 @@ func main() {
 			})
 			return
 		}
-		decryDate, err := encry.DecryptBase64([]byte(p.EncryptData), PRI)
+		decryDate, err := encry.DecryptBase64([]byte(p.EncryptData), PRI, MAX_DECRYPT_BLOCK)
 		if err != nil {
 			c.JSON(http.StatusOK, ApiReturn{
 				Ret: -1,
@@ -130,13 +144,15 @@ func main() {
 			})
 			return
 		}
-		err = encry.VerifyBase64(decryDate, []byte(p.Sign), crypto.MD5, THIRD_PUB)
-		if err != nil {
-			c.JSON(http.StatusOK, ApiReturn{
-				Ret: -1,
-				Msg: err.Error(),
-			})
-			return
+		if len(p.Sign) != 0 {
+			err = encry.VerifyBase64(decryDate, []byte(p.Sign), crypto.MD5, THIRD_PUB)
+			if err != nil {
+				c.JSON(http.StatusOK, ApiReturn{
+					Ret: -1,
+					Msg: err.Error(),
+				})
+				return
+			}
 		}
 		if c.IsAborted() {
 			return

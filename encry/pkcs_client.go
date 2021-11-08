@@ -103,21 +103,62 @@ func genPriKey(privateKey []byte, privateKeyType Type) (*rsa.PrivateKey, error) 
 func Encrypt(plaintext []byte, pub *rsa.PublicKey) ([]byte, error) {
 	return rsa.EncryptPKCS1v15(rand.Reader, pub, plaintext)
 }
-func EncryptBase64(plaintext []byte, pub *rsa.PublicKey) ([]byte, error) {
-	data, err := rsa.EncryptPKCS1v15(rand.Reader, pub, plaintext)
-	out := base64.StdEncoding.EncodeToString(data)
-	return []byte(out), err
+func EncryptBase64(plaintext []byte, pub *rsa.PublicKey, maxEncryBlock int) ([]byte, error) {
+	inputLenth := len(plaintext)
+	offset := 0
+	leftLenth := inputLenth - offset
+	outResult := make([]byte, 0)
+	// 对数据分段加密
+	for leftLenth > 0 {
+		var data []byte
+		var err error
+		if leftLenth > maxEncryBlock {
+			data, err = Encrypt(plaintext[offset:offset+maxEncryBlock], pub)
+		} else {
+			data, err = Encrypt(plaintext[offset:], pub)
+		}
+		if err != nil {
+			fmt.Println("encry error", err)
+			return nil, err
+		}
+		offset = offset + maxEncryBlock
+		leftLenth = inputLenth - offset
+		outResult = append(outResult, data...)
+	}
+	out := base64.StdEncoding.EncodeToString(outResult)
+	return []byte(out), nil
 }
 func Decrypt(ciphertext []byte, private *rsa.PrivateKey) ([]byte, error) {
 	return rsa.DecryptPKCS1v15(rand.Reader, private, ciphertext)
 }
-func DecryptBase64(ciphertext []byte, private *rsa.PrivateKey) ([]byte, error) {
+func DecryptBase64(ciphertext []byte, private *rsa.PrivateKey, maxDecryBlock int) ([]byte, error) {
 	srcBase64, err := base64.StdEncoding.DecodeString(string(ciphertext))
 	if err != nil {
 		fmt.Println("DecodeString:", err)
 		return nil, err
 	}
-	return Decrypt(srcBase64, private)
+	inputLenth := len(srcBase64)
+	offset := 0
+	leftLenth := inputLenth - offset
+	outResult := make([]byte, 0)
+	// 对数据分段加密
+	for leftLenth > 0 {
+		var data []byte
+		var err error
+		if leftLenth > maxDecryBlock {
+			data, err = Decrypt(srcBase64[offset:offset+maxDecryBlock], private)
+		} else {
+			data, err = Decrypt(srcBase64[offset:], private)
+		}
+		if err != nil {
+			fmt.Println("decry error: inputlen:", inputLenth, ", offset:", offset, err)
+			return nil, err
+		}
+		offset = offset + maxDecryBlock
+		leftLenth = inputLenth - offset
+		outResult = append(outResult, data...)
+	}
+	return outResult, nil
 }
 
 func Sign(src []byte, hash crypto.Hash, private *rsa.PrivateKey) ([]byte, error) {
