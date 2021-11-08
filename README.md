@@ -11,9 +11,22 @@ rsa加密、加签、解密、验签。
 
 ## 用法
 ### 启动
+```javascript
 ecryhub -port 应用启动的端口 -pub /path-for-key/pubkey1.txt -pri /path-for-key/prikey1.txt -thirdpub /path-for-key/thirdpubkey1.txt
+```
+```
 e.g. ecryhub -port 9090 -pub /Users/tanghc/Documents/pubkey1.txt -pri /Users/tanghc/Documents/prikey1.txt -thirdpub /Users/tanghc/Documents/thirdpubkey1.txt
+```
 
+### 编译
+linux可以编译到：
+```
+CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build -o ecryhub
+```
+本机是mac可以直接运行
+```
+go build -o ecryhub
+```
 ### http说明
 1. 使用application/json的请求方式。请求体为入参的json
 2. 响应的结构为
