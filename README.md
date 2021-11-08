@@ -27,7 +27,7 @@ CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build -o ecryhub
 ```
 go build -o ecryhub
 ```
-### http说明
+### http接口说明
 1. 使用application/json的请求方式。请求体为入参的json
 2. 响应的结构为
 ```javascript
