@@ -58,9 +58,41 @@ func Test_Decry(t *testing.T) {
 	//encrydata, _ := EncryptBase64([]byte(raw), pub)
 	//fmt.Println("encry: ", string(encrydata))
 	encrydata := "Qu/d9A329yqTaDfPAEJek/xMutC3jO07wonL/BZsRw9EZiBm3i7gYvXcPUx7kJQTTabJvyybCIjAi9qjgE81VJuwbSwcdsgNakllyYrqDz0gAGPv5hkz5Sk8Idi9wj9wkCBX2RK77pANU5H3j1URA6UjhJnZE0Wlo6WZl6Qwxyo="
-	data, err := DecryptBase64([]byte(encrydata), pri)
+	data, err := DecryptBase64([]byte(encrydata), pri, 128)
 	fmt.Println("decry: ", string(data), err)
 	ss := "QE4S2t26Fgd6hEDqDW88w4CtmEXFdHQoAaAbeFtjmeD17AjQnwtjw0JWNhl3VidccXvc5cyDYmTwufG64FZuyHR6wWQiMck8Q8Iy/NMVUtFQZUhDMPCg6anK6ACQgMz/FiIu+vyrsGVgyu9OJZDk1FtY+AHdKRmYHqCvxaPXjmc="
 	err = VerifyBase64(data, []byte(ss), crypto.MD5, thirdpub)
 	fmt.Println("verify: ", err)
+}
+func Test_Decry2(t *testing.T) {
+	pubdata, err := ioutil.ReadFile("/Users/tanghc/Documents/pubkey2.txt")
+	if err != nil {
+		fmt.Println("load pub key error")
+		return
+	}
+	pub, err := GetPublicKeyWithBase64(string(pubdata))
+	if err != nil {
+		fmt.Println("generate pub key error")
+		return
+	}
+	fmt.Println("pubkey: ", pub)
+	pridata, err := ioutil.ReadFile("/Users/tanghc/Documents/prikey2.txt")
+	if err != nil {
+		fmt.Println("load pri key error")
+		return
+	}
+
+	pri, err := GetPrivateKeyWithBase64(string(pridata), PKCS8)
+	//pri, err := GetPrivateKeyWithBase64(string(pridata), PKCS1)
+	if err != nil {
+		fmt.Println("generate pri key error")
+		return
+	}
+	fmt.Println("prikey: ", pri)
+
+	sign := "WtOIgMfdr9+YjHdLn+NUcNhWEisgN9sCQUkwwGvtWlDV4nDPO+gkz7D5E+jZg16BL3fKxk2A4EEaD2RQDKd1W8lvRfiRYz7CqnyWV3pWjAWwlRU+cU/gHv0YNBFFfDepvupVD60GB/ZPNNBnavyk0fjRUrRwTNCaDaaxY+uALFI="
+	//data, err := EncryptOneBlockBase64([]byte(sign), pri)
+	//fmt.Println("decry: ", string(data), err)
+	data, err := DecryptOneBlockBase64([]byte(sign), pri)
+	fmt.Println("decry: ", string(data), err)
 }

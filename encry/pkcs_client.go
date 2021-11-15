@@ -103,6 +103,11 @@ func genPriKey(privateKey []byte, privateKeyType Type) (*rsa.PrivateKey, error) 
 func Encrypt(plaintext []byte, pub *rsa.PublicKey) ([]byte, error) {
 	return rsa.EncryptPKCS1v15(rand.Reader, pub, plaintext)
 }
+func EncryptOneBlockBase64(plaintext []byte, pub *rsa.PublicKey) ([]byte, error) {
+	data, err := Encrypt(plaintext, pub)
+	out := base64.StdEncoding.EncodeToString(data)
+	return []byte(out), err
+}
 func EncryptBase64(plaintext []byte, pub *rsa.PublicKey, maxEncryBlock int) ([]byte, error) {
 	inputLenth := len(plaintext)
 	offset := 0
@@ -130,6 +135,15 @@ func EncryptBase64(plaintext []byte, pub *rsa.PublicKey, maxEncryBlock int) ([]b
 }
 func Decrypt(ciphertext []byte, private *rsa.PrivateKey) ([]byte, error) {
 	return rsa.DecryptPKCS1v15(rand.Reader, private, ciphertext)
+}
+func DecryptOneBlockBase64(ciphertext []byte, private *rsa.PrivateKey) ([]byte, error) {
+	srcBase64, err := base64.StdEncoding.DecodeString(string(ciphertext))
+	if err != nil {
+		fmt.Println("DecodeString:", err)
+		return nil, err
+	}
+	data, err := rsa.DecryptPKCS1v15(rand.Reader, private, srcBase64)
+	return data, err
 }
 func DecryptBase64(ciphertext []byte, private *rsa.PrivateKey, maxDecryBlock int) ([]byte, error) {
 	srcBase64, err := base64.StdEncoding.DecodeString(string(ciphertext))
@@ -178,6 +192,17 @@ func Verify(src []byte, sign []byte, hash crypto.Hash, pub *rsa.PublicKey) error
 	h.Write(src)
 	hashed := h.Sum(nil)
 	return rsa.VerifyPKCS1v15(pub, hash, hashed, sign)
+}
+func VerifyWithHashed(hashed []byte, sign []byte, hash crypto.Hash, pub *rsa.PublicKey) error {
+	return rsa.VerifyPKCS1v15(pub, hash, hashed, sign)
+}
+func VerifyBase64WithHashed(hashed []byte, sign []byte, hash crypto.Hash, pub *rsa.PublicKey) error {
+	signBase64, err := base64.StdEncoding.DecodeString(string(sign))
+	if err != nil {
+		fmt.Println("DecodeString:", err)
+		return err
+	}
+	return VerifyWithHashed(hashed, signBase64, hash, pub)
 }
 func VerifyBase64(src []byte, sign []byte, hash crypto.Hash, pub *rsa.PublicKey) error {
 	signBase64, err := base64.StdEncoding.DecodeString(string(sign))

@@ -164,6 +164,34 @@ func main() {
 			},
 		})
 	})
+	r.POST("/verify_sign", func(c *gin.Context) {
+		var p = struct {
+			Hash string `json:"hash"`
+			Sign string `json:"sign"`
+		}{}
+		if err := c.ShouldBind(&p); err != nil {
+			c.JSON(http.StatusOK, ApiReturn{
+				Ret: -1,
+				Msg: "request parameters format error",
+			})
+			return
+		}
+		err := encry.VerifyBase64WithHashed([]byte(p.Hash), []byte(p.Sign), crypto.SHA256, PUB)
+		if err != nil {
+			c.JSON(http.StatusOK, ApiReturn{
+				Ret: -1,
+				Msg: err.Error(),
+			})
+			return
+		}
+		if c.IsAborted() {
+			return
+		}
+		c.JSON(http.StatusOK, ApiReturn{
+			Ret:  1,
+			Data: map[string]string{},
+		})
+	})
 	// 3.监听端口，默认在8080
 	// Run("里面不指定端口号默认为8080")
 	r.Run(fmt.Sprintf(":%d", port))
